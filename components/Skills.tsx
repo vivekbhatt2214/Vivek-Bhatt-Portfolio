@@ -1,0 +1,12 @@
+import { BarChart3, Code2, Database, Layers3, BriefcaseBusiness } from "lucide-react";
+import SectionTitle from "@/components/SectionTitle";
+import SkillsChart from "@/components/extras/SkillsChart";
+const groups=[
+ {icon:BarChart3,title:"Data Analytics",description:"From raw data to decision-ready insight.",items:["Data Analysis","Data Cleaning","Data Transformation","Data Visualization","Exploratory Data Analysis","KPI Analysis","Trend Analysis"]},
+ {icon:BriefcaseBusiness,title:"MIS & Business Reporting",description:"Structured reporting for operational and management decisions.",items:["MIS Executive","MIS Reporting","Management Reporting","Daily / Weekly / Monthly Reports","KPI Reporting","Data Validation","Data Entry","Reconciliation"]},
+ {icon:Layers3,title:"Excel & Power BI",description:"Reporting, dashboards and interactive business intelligence.",items:["Microsoft Excel","Advanced Excel","Pivot Tables","XLOOKUP / VLOOKUP","Power Query","Power BI","DAX Fundamentals","Dashboard Design"]},
+ {icon:Database,title:"SQL & Databases",description:"Extracting, shaping and validating data for analysis.",items:["SQL","MySQL","PostgreSQL","Joins","Aggregations","Subqueries","Data Extraction","Database Fundamentals"]},
+ {icon:Code2,title:"Python for Analytics",description:"Building a stronger programming foundation around data.",items:["Python","Pandas","NumPy","Matplotlib","Data Wrangling","EDA","CSV / Excel Processing"]},
+ {icon:Code2,title:"Development & Tools",description:"Supporting technical skills used to build and present digital products.",items:["Next.js","React","JavaScript","HTML / CSS","Node.js","Tailwind CSS","Git & GitHub","VS Code"]}
+];
+export default function Skills(){return <section id="skills" className="section-pad section-alt"><SectionTitle eyebrow="Skills & capabilities" title="A practical toolkit for analysis, reporting and business intelligence." text="My skill set combines analytical tools with reporting discipline and supporting development knowledge. The goal is to move comfortably from data preparation to insight, visualization and clear communication."/><div className="skills-grid skills-grid-expanded">{groups.map(({icon:Icon,title,description,items},i)=><div className={`skill-card reveal delay-${Math.min(i,3)}`} key={title}><div className="skill-icon"><Icon size={22}/></div><h3>{title}</h3><p className="skill-description">{description}</p><div className="skill-list">{items.map(item=><span key={item}>{item}</span>)}</div></div>)}</div><SkillsChart/></section>}

@@ -63,3 +63,6 @@ The analytics values are read from PostgreSQL `analytics_events`; the dashboard 
 ### Database migration safety
 
 `lib/schema.ts` is intentionally idempotent. Legacy foreign keys that point to `portfolio_files` are removed before file-ID columns are normalized, so older `INTEGER`/`BIGINT` installations do not fail with PostgreSQL foreign-key type errors. Failed schema initialization is also retryable without restarting the process.
+## 🌐 Live Website
+
+[Visit My Portfolio](https://project-0y1rk.vercel.app)

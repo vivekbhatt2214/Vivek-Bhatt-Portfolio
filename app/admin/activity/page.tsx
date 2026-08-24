@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, Phone, RefreshCw, ArrowUpRight } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Download,
+  Phone,
+  RefreshCw,
+  ArrowUpRight,
+} from "lucide-react";
 import CustomCursor from "@/components/extras/CustomCursor";
 
 type ActivityView = "all" | "downloads" | "calls";
@@ -29,23 +34,28 @@ type CallRecord = {
 };
 
 export default function Activity() {
-  const searchParams = useSearchParams();
+  const [view, setView] = useState<ActivityView>("all");
 
-  const initialView = useMemo<ActivityView>(() => {
-    const value = searchParams.get("view");
-    return value === "downloads" || value === "calls" ? value : "all";
-  }, [searchParams]);
-
-  const [view, setView] = useState<ActivityView>(initialView);
   const [data, setData] = useState<{
     downloads: DownloadRecord[];
     calls: CallRecord[];
-  }>({ downloads: [], calls: [] });
+  }>({
+    downloads: [],
+    calls: [],
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setView(initialView);
-  }, [initialView]);
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get("view");
+
+    if (value === "downloads" || value === "calls") {
+      setView(value);
+    } else {
+      setView("all");
+    }
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -53,7 +63,9 @@ export default function Activity() {
     try {
       const response = await fetch("/api/admin/activity", {
         cache: "no-store",
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+        },
       });
 
       const payload = await response.json().catch(() => ({}));
@@ -63,12 +75,18 @@ export default function Activity() {
       }
 
       setData({
-        downloads: Array.isArray(payload?.downloads) ? payload.downloads : [],
+        downloads: Array.isArray(payload?.downloads)
+          ? payload.downloads
+          : [],
         calls: Array.isArray(payload?.calls) ? payload.calls : [],
       });
     } catch (error) {
       console.error("Activity load error:", error);
-      setData({ downloads: [], calls: [] });
+
+      setData({
+        downloads: [],
+        calls: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -89,14 +107,21 @@ export default function Activity() {
       url.searchParams.set("view", nextView);
     }
 
-    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    window.history.replaceState(
+      {},
+      "",
+      `${url.pathname}${url.search}`
+    );
   };
 
   const formatDate = (value?: string | null) => {
     if (!value) return "—";
 
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "—";
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
 
     return date.toLocaleString("en-IN");
   };
@@ -129,7 +154,10 @@ export default function Activity() {
             disabled={loading}
             type="button"
           >
-            <RefreshCw size={15} className={loading ? "activity-spin" : ""} />
+            <RefreshCw
+              size={15}
+              className={loading ? "activity-spin" : ""}
+            />
             {loading ? "Refreshing…" : "Refresh"}
           </button>
         </div>
@@ -264,11 +292,15 @@ export default function Activity() {
                 ))}
 
               {view === "downloads" && !data.downloads.length && (
-                <p className="empty-record">No download requests yet.</p>
+                <p className="empty-record">
+                  No download requests yet.
+                </p>
               )}
 
               {view === "calls" && !data.calls.length && (
-                <p className="empty-record">No call requests yet.</p>
+                <p className="empty-record">
+                  No call requests yet.
+                </p>
               )}
             </div>
 
@@ -442,9 +474,12 @@ function ActivityCard({
       <div className="activity-card-head">
         <div>
           <span className="eyebrow">{eyebrow}</span>
+
           <h2>{title}</h2>
+
           <small className="activity-card-count">
-            {count} {count === 1 ? "record" : "records"} · Click to open full list
+            {count} {count === 1 ? "record" : "records"} · Click to open full
+            list
           </small>
         </div>
 
@@ -469,17 +504,28 @@ function DownloadRecordRow({
   expanded?: boolean;
 }) {
   return (
-    <div className={`record-row ${expanded ? "record-row-expanded" : ""}`}>
+    <div
+      className={`record-row ${
+        expanded ? "record-row-expanded" : ""
+      }`}
+    >
       <div>
         <strong>{item.project_title || "Project file"}</strong>
+
         <span>{item.email}</span>
+
         {expanded && item.downloaded_at && (
-          <small>Downloaded: {formatDate(item.downloaded_at)}</small>
+          <small>
+            Downloaded: {formatDate(item.downloaded_at)}
+          </small>
         )}
       </div>
 
       <div>
-        <small>{item.verified_at ? "Verified" : "Pending"}</small>
+        <small>
+          {item.verified_at ? "Verified" : "Pending"}
+        </small>
+
         <time>{formatDate(item.created_at)}</time>
       </div>
     </div>
@@ -496,9 +542,14 @@ function CallRecordRow({
   expanded?: boolean;
 }) {
   return (
-    <div className={`record-row ${expanded ? "record-row-expanded" : ""}`}>
+    <div
+      className={`record-row ${
+        expanded ? "record-row-expanded" : ""
+      }`}
+    >
       <div>
         <strong>{item.name || "Visitor"}</strong>
+
         <span>
           {item.email}
           {item.phone ? ` • ${item.phone}` : ""}
@@ -509,8 +560,10 @@ function CallRecordRow({
             <small>
               Reason: {item.reason || "General call"}
             </small>
+
             <small>
-              Preferred time: {item.preferred_time || "Not provided"}
+              Preferred time:{" "}
+              {item.preferred_time || "Not provided"}
             </small>
           </>
         )}
@@ -518,6 +571,7 @@ function CallRecordRow({
 
       <div>
         <small>{item.status || "PENDING"}</small>
+
         <time>{formatDate(item.created_at)}</time>
       </div>
     </div>

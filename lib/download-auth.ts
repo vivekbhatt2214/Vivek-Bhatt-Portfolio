@@ -1,0 +1,4 @@
+import crypto from "node:crypto";
+const secret=()=>process.env.PROJECT_DOWNLOAD_SECRET||process.env.ADMIN_SESSION_SECRET||process.env.ADMIN_PASSWORD||"change-this-secret";
+export function createDownloadToken(requestId:number,fileId:number){const exp=Date.now()+5*60*1000;const payload=`${requestId}:${fileId}:${exp}`;const sig=crypto.createHmac("sha256",secret()).update(payload).digest("hex");return `${Buffer.from(payload).toString("base64url")}.${sig}`}
+export function verifyDownloadToken(token:string,requestId:number,fileId:number){try{const [enc,sig]=token.split(".");const payload=Buffer.from(enc,"base64url").toString("utf8");const [rid,fid,exp]=payload.split(":");if(Number(rid)!==requestId||Number(fid)!==fileId||Number(exp)<Date.now())return false;const expected=crypto.createHmac("sha256",secret()).update(payload).digest("hex");return sig===expected}catch{return false}}

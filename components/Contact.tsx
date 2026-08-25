@@ -1,0 +1,47 @@
+"use client";
+import { FormEvent, useState } from "react";
+import { ArrowUpRight, Github, Linkedin, Mail, MapPin, X, Phone, Clock3 } from "lucide-react";
+import SectionTitle from "@/components/SectionTitle";
+import CopyEmailButton from "@/components/extras/CopyEmailButton";
+import { useSiteContent } from "@/components/SiteContentProvider";
+
+export default function Contact(){
+  const { siteContent } = useSiteContent();
+  const contact = siteContent.contact;
+  const [name,setName]=useState(""); const [email,setEmail]=useState(""); const [reason,setReason]=useState(""); const [message,setMessage]=useState("");
+  const [otp,setOtp]=useState(""); const [showOtp,setShowOtp]=useState(false); const [verificationId,setVerificationId]=useState<number|null>(null); const [loading,setLoading]=useState(false); const [verifyLoading,setVerifyLoading]=useState(false); const [status,setStatus]=useState(""); const [error,setError]=useState("");
+  const [callOpen,setCallOpen]=useState(false); const [call,setCall]=useState({name:"",email:"",phone:"",preferredTime:"",reason:"",message:""}); const [callStatus,setCallStatus]=useState(""); const [callError,setCallError]=useState(""); const [callLoading,setCallLoading]=useState(false);
+
+  async function sendOtp(e:FormEvent){e.preventDefault();setError("");setStatus("");if(!name.trim()||!email.trim()||!reason||!message.trim()){setError("Please complete all contact fields.");return;}try{setLoading(true);const r=await fetch("/api/contact/send-otp",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email,reason,message})});const d=await r.json();if(!r.ok)throw new Error(d.details||d.error||"Unable to send verification code.");setVerificationId(Number(d.id));setShowOtp(true);setStatus("Verification code sent. Check your email.");}catch(e){setError(e instanceof Error?e.message:"Unable to send verification code.");}finally{setLoading(false);}}
+  async function verifyOtp(e:FormEvent){e.preventDefault();setError("");if(verificationId===null||!/^[0-9]{6}$/.test(otp.trim())){setError("Enter the 6-digit verification code.");return;}try{setVerifyLoading(true);const r=await fetch("/api/contact/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:verificationId,otp:otp.trim()})});const d=await r.json();if(!r.ok)throw new Error(d.details||d.error||"Invalid verification code.");setShowOtp(false);setVerificationId(null);setOtp("");setName("");setEmail("");setReason("");setMessage("");setStatus("Email verified successfully. Your message has been submitted.");}catch(e){setError(e instanceof Error?e.message:"Verification failed.");}finally{setVerifyLoading(false);}}
+  async function submitCall(e:FormEvent){e.preventDefault();setCallError("");setCallStatus("");if(!call.name||!call.email||!call.phone||!call.preferredTime){setCallError("Name, email, phone and preferred time are required.");return;}try{setCallLoading(true);const r=await fetch("/api/call-request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(call)});const d=await r.json();if(!r.ok)throw new Error(d.error||"Unable to submit request.");setCallStatus("Your call request has been received.");setCall({name:"",email:"",phone:"",preferredTime:"",reason:"",message:""});}catch(e){setCallError(e instanceof Error?e.message:"Unable to submit request.");}finally{setCallLoading(false);}}
+
+  return <>
+    <section id="contact" className="section-pad contact-section-premium">
+      <SectionTitle eyebrow={contact.eyebrow} title={contact.title} text={contact.text} />
+      <div className="contact-premium-grid">
+        <div className="contact-form-card">
+          <div className="contact-card-head"><div><span className="eyebrow">DIRECT MESSAGE</span><h3>Tell me what you need.</h3></div><div className="contact-card-icon"><Mail size={20}/></div></div>
+          <form onSubmit={sendOtp} className="contact-premium-form">
+            <div className="contact-field-grid"><label><span>Your name</span><input value={name} onChange={e=>setName(e.target.value)} placeholder="Enter your name"/></label><label><span>Email address</span><input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="you@example.com"/></label></div>
+            <label><span>Reason for contact</span><select value={reason} onChange={e=>setReason(e.target.value)}><option value="">Select a reason</option><option>Job opportunity</option><option>Data Analytics project</option><option>MIS / Reporting opportunity</option><option>Freelance / Collaboration</option><option>General enquiry</option></select></label>
+            <label><span>Message</span><textarea value={message} onChange={e=>setMessage(e.target.value)} placeholder="Tell me about the opportunity, project or question..." rows={7}/></label>
+            {error&&<div className="form-message form-error">{error}</div>}{status&&<div className="form-message form-success">{status}</div>}
+            <button className="contact-submit" disabled={loading} data-analytics="contact_submit_start">{loading?"Sending verification code…":"Verify email & send message"}<ArrowUpRight size={17}/></button>
+          </form>
+        </div>
+        <div className="contact-side">
+          <div className="contact-info-card contact-info-card-email"><a href={`mailto:${contact.email}`} data-analytics="email_click" className="contact-info-card-link"><Mail/><div><span>Email</span><strong>{contact.email}</strong><small>Best for detailed enquiries</small></div><ArrowUpRight/></a><CopyEmailButton email={contact.email}/></div>
+          <a className="contact-info-card" href={contact.linkedin} target="_blank" rel="noreferrer" data-analytics="linkedin_click"><Linkedin/><div><span>LinkedIn</span><strong>Connect professionally</strong><small>Career opportunities & networking</small></div><ArrowUpRight/></a>
+          <a className="contact-info-card" href={contact.github} target="_blank" rel="noreferrer" data-analytics="github_profile_click"><Github/><div><span>GitHub</span><strong>Explore my work</strong><small>Projects, code & experiments</small></div><ArrowUpRight/></a>
+          <div className="contact-info-card"><MapPin/><div><span>Location</span><strong>{contact.location}</strong><small>Open to professional opportunities</small></div></div>
+          <button className="request-call-card" onClick={()=>{setCallOpen(true);setCallStatus("");setCallError("");}} data-analytics="request_call_open"><span className="request-call-icon"><Phone size={20}/></span><div><span>REQUEST A CALL</span><strong>Prefer a quick conversation?</strong><small>Share your preferred time and I’ll get back to you.</small></div><ArrowUpRight/></button>
+        </div>
+      </div>
+    </section>
+
+    {showOtp&&<div className="premium-modal-backdrop"><div className="premium-modal"><button className="modal-close" onClick={()=>setShowOtp(false)}><X/></button><div className="modal-icon"><Mail/></div><span className="eyebrow">EMAIL VERIFICATION</span><h3>Confirm your email</h3><p>Enter the six-digit code sent to <strong>{email}</strong>.</p><form onSubmit={verifyOtp}><input className="otp-input-premium" value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" placeholder="000000"/><button className="contact-submit" disabled={verifyLoading}>{verifyLoading?"Verifying…":"Verify & submit"}</button></form></div></div>}
+
+    {callOpen&&<div className="premium-modal-backdrop"><div className="premium-modal call-modal"><button className="modal-close" onClick={()=>setCallOpen(false)}><X/></button><div className="modal-icon"><Phone/></div><span className="eyebrow">CALL REQUEST</span><h3>Let’s arrange a quick call.</h3><p>Tell me when you are most comfortable speaking.</p><form onSubmit={submitCall} className="call-form"><div className="contact-field-grid"><label><span>Name</span><input value={call.name} onChange={e=>setCall({...call,name:e.target.value})}/></label><label><span>Email</span><input type="email" value={call.email} onChange={e=>setCall({...call,email:e.target.value})}/></label></div><div className="contact-field-grid"><label><span>Phone</span><input value={call.phone} onChange={e=>setCall({...call,phone:e.target.value})}/></label><label><span>Preferred time</span><input value={call.preferredTime} onChange={e=>setCall({...call,preferredTime:e.target.value})} placeholder="e.g. 5–7 PM IST"/></label></div><label><span>Reason</span><input value={call.reason} onChange={e=>setCall({...call,reason:e.target.value})} placeholder="Job, project, collaboration…"/></label><label><span>Message</span><textarea rows={4} value={call.message} onChange={e=>setCall({...call,message:e.target.value})}/></label>{callError&&<div className="form-message form-error">{callError}</div>}{callStatus&&<div className="form-message form-success">{callStatus}</div>}<button className="contact-submit" disabled={callLoading}>{callLoading?"Submitting…":"Request a call"}<ArrowUpRight size={17}/></button></form></div></div>}
+  </>;
+}
